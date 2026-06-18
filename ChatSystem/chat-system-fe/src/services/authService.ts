@@ -24,6 +24,7 @@ export interface Login {
 
 }
 
+// verity request for opt 
 export interface VerifyRequest{
   email:string;
   otp:string;
@@ -48,9 +49,4 @@ export const authService = {
 };
 
 
-
-export const loginService = {
-
-
-};
 
