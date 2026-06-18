@@ -1,0 +1,69 @@
+package com.chatsystem.ChatSystem.controller;
+
+import com.chatsystem.ChatSystem.dto.SignUpRequest;
+import com.chatsystem.ChatSystem.dto.VerifyRequest;
+import com.chatsystem.ChatSystem.exception.AlreadyFoundException;
+import com.chatsystem.ChatSystem.exception.NotFoundException;
+import com.chatsystem.ChatSystem.exception.ServerException;
+import com.chatsystem.ChatSystem.service.UserService;
+import org.antlr.v4.runtime.InputMismatchException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    private Logger logger = LoggerFactory.getLogger(AuthController.class);
+
+    private UserService userService;
+
+    public AuthController(UserService userService){
+
+        this.userService = userService;
+
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<Void> signup(@RequestBody SignUpRequest signUpRequest){
+        try{
+
+            userService.signup(signUpRequest);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }catch(ServerException serverException){
+            logger.error("something went wrong with the server");
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (AlreadyFoundException e) {
+            logger.error("User already exist");
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
+
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<Void> verifyOpt(@RequestBody VerifyRequest verifyRequest){
+        try{
+
+            userService.Verify(verifyRequest.getEmail(), verifyRequest.getOtp());
+            return new ResponseEntity<>(HttpStatus.OK);
+
+        }catch(NotFoundException notFoundException){
+            logger.error("User expired",notFoundException);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        }catch(InputMismatchException inputMismatchException){
+            logger.error("Invalid code",inputMismatchException);
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }catch(Exception exception){
+            logger.error("Something went wrong with the server",exception);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+}
