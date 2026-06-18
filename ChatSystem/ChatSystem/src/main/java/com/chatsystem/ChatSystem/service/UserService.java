@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -47,7 +48,7 @@ public class UserService implements UserDetailsService {
 
     //constructor
 
-    public UserService(JWTService jwtService,AuthenticationManager authenticationManager,UserRepo userRepo, JavaMailSender mailSender,PendingUserRepository pendingUserRepo) {
+    public UserService(JWTService jwtService, @Lazy AuthenticationManager authenticationManager, UserRepo userRepo, JavaMailSender mailSender, PendingUserRepository pendingUserRepo) {
         this.mailSender = mailSender;
         this.userRepo = userRepo;
         this.pendingUserRepo = pendingUserRepo;
