@@ -8,17 +8,17 @@ export default function LoginForm() {
   // State for form fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   // State for UI feedback
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Prevent page refresh
-    
+
     // Reset previous errors
     setError('');
-    
+
     // Basic client-side validation
     if (!email || !password) {
       setError('Please fill in all fields.');
@@ -47,8 +47,11 @@ export default function LoginForm() {
         const status = err.response.status;
         const message = err.response.data; // Usually a string like "Invalid username or password"
 
-        if (status === 401 || status === 403) {
+        if (status === 401) {
           setError('Invalid email or password. Please try again.');
+        }
+        else if (status === 403) {
+          setError('Your account has been disabled.');
         } else if (status === 500) {
           setError('Server error. Please try again later.');
         } else {
@@ -69,7 +72,7 @@ export default function LoginForm() {
   return (
     <div className="login-container">
       <h4 className="text-left mb-2">Welcome</h4>
-      
+
       {/* Display error message if present */}
       {error && (
         <div className="error-message" style={{ color: 'red', fontSize: '0.9rem', marginBottom: '1rem' }}>
@@ -94,7 +97,7 @@ export default function LoginForm() {
           required
           disabled={loading}
         />
-        
+
         <button type="submit" disabled={loading}>
           {loading ? 'Logging in...' : 'Log In'}
         </button>

@@ -20,6 +20,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -105,27 +106,28 @@ public class UserService implements UserDetailsService {
 
     }
 
+    public String login(LoginRequest loginRequest) throws ServerException {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
+            return jwtService.generateToken(loginRequest.getEmail());
 
-    public String login(LoginRequest loginRequest)throws ServerException,NotFoundException{
-        try{
-
-            Authentication authentication = authenticationManager
-                    .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-
-            if(!authentication.isAuthenticated()){
-                logger.error("Invalid email or password ",UserService.class);
-                throw new NotFoundException("Invalid email or password");
-
+        } catch (Exception e) {
+            // ✅ CRITICAL FIX: If it's a Spring Security authentication exception
+            // (BadCredentials, Disabled, Locked, etc.), DO NOT wrap it.
+            // Let it bubble up to the controller AS-IS.
+            if (e instanceof AuthenticationException) {
+                throw (AuthenticationException) e;
             }
 
-            String token = jwtService.generateToken(loginRequest.getEmail());
-            return token;
-        }catch(Exception e){
-            logger.error("something went wrong with the server ",e);
-            throw new ServerException("Something went wrong with the server ");
-
+            // ✅ Only wrap genuine server errors (DB down, network failure, etc.)
+            logger.error("Server error during login", e);
+            throw new ServerException("Something went wrong with the server");
         }
-
     }
     @Transactional
     public void Verify(String email,String verify)throws NotFoundException, ServerException,InputMismatchException {

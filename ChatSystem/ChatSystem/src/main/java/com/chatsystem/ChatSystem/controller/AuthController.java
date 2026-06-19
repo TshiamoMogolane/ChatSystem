@@ -14,6 +14,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,7 +39,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest){
 
-        try{
+        try {
 
             //login function
             logger.info("Performing login function");
@@ -57,10 +59,14 @@ public class AuthController {
                     .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                     .body("Login Successful");
 
-        }catch(NotFoundException exception){
-            logger.error("Invalid credentials ",exception);
+        }catch(DisabledException ex){
+            logger.error("Your account has disabled ");
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
+        } catch(BadCredentialsException ex){
+            logger.error("Invalid credentials");
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }catch(ServerException ex){
+        } catch(Exception ex){
             logger.error("Something went wrong with the server",ex);
             return new ResponseEntity<>(HttpStatus
                     .INTERNAL_SERVER_ERROR);
