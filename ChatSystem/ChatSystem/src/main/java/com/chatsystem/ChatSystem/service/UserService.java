@@ -106,7 +106,7 @@ public class UserService implements UserDetailsService {
     }
 
 
-    public String login(LoginRequest loginRequest)throws ServerException{
+    public String login(LoginRequest loginRequest)throws ServerException,NotFoundException{
         try{
 
             Authentication authentication = authenticationManager
