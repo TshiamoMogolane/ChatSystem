@@ -33,4 +33,12 @@ public class UserPrincipal implements UserDetails {
     public String getUsername() {
         return user.getEmail();
     }
+
+    // ✅ THIS IS THE METHOD THAT CONTROLS THE "DISABLED" STATE
+    @Override
+    public boolean isEnabled() {
+        // If this returns FALSE, Spring throws DisabledException on login.
+        // You need a field in your User entity to control this.
+        return user.isEnabled(); // 👈 This must exist in your 'User' class
+    }
 }

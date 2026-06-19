@@ -42,10 +42,10 @@ export default function LoginForm() {
       console.error('Login error:', err);
 
       if (err.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
+        
+        
         const status = err.response.status;
-        const message = err.response.data; // Usually a string like "Invalid username or password"
+        const message = err.response.data; 
 
         if (status === 401) {
           setError('Invalid email or password. Please try again.');
