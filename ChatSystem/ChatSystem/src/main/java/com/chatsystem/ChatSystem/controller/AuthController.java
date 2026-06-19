@@ -1,5 +1,6 @@
 package com.chatsystem.ChatSystem.controller;
 
+import com.chatsystem.ChatSystem.dto.LoginRequest;
 import com.chatsystem.ChatSystem.dto.SignUpRequest;
 import com.chatsystem.ChatSystem.dto.VerifyRequest;
 import com.chatsystem.ChatSystem.exception.AlreadyFoundException;
@@ -9,7 +10,9 @@ import com.chatsystem.ChatSystem.service.UserService;
 import org.antlr.v4.runtime.InputMismatchException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +30,42 @@ public class AuthController {
     public AuthController(UserService userService){
 
         this.userService = userService;
+
+    }
+
+    //login api
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest){
+
+        try{
+
+            //login function
+            logger.info("Performing login function");
+            //login function frm UserService class
+            String token = userService.login(loginRequest);
+
+            ResponseCookie jwtCookie = ResponseCookie.from("jwt", token)
+                    .httpOnly(true)
+                    .secure(false)
+                    .path("/")
+                    .maxAge(24 * 60 * 60)
+                    .sameSite("Lax")
+                    .build();
+            logger.info("Successfully logged");
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                    .body("Login Successful");
+
+        }catch(NotFoundException exception){
+            logger.error("Invalid credentials ",exception);
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }catch(ServerException ex){
+            logger.error("Something went wrong with the server",ex);
+            return new ResponseEntity<>(HttpStatus
+                    .INTERNAL_SERVER_ERROR);
+        }
+
 
     }
 
