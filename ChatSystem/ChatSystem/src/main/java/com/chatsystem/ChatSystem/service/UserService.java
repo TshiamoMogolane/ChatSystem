@@ -6,8 +6,10 @@ import com.chatsystem.ChatSystem.dto.SignUpRequest;
 import com.chatsystem.ChatSystem.exception.AlreadyFoundException;
 import com.chatsystem.ChatSystem.exception.NotFoundException;
 import com.chatsystem.ChatSystem.exception.ServerException;
+import com.chatsystem.ChatSystem.model.PasswordResetToken;
 import com.chatsystem.ChatSystem.model.User;
 import com.chatsystem.ChatSystem.model.UserPrincipal;
+import com.chatsystem.ChatSystem.repository.PasswordResetTokenRepository;
 import com.chatsystem.ChatSystem.repository.PendingUserRepository;
 import com.chatsystem.ChatSystem.repository.UserRepo;
 import jakarta.transaction.Transactional;
@@ -17,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,6 +32,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.InputMismatchException;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 
@@ -46,15 +50,18 @@ public class UserService implements UserDetailsService {
     private final Logger logger = LoggerFactory.getLogger(UserService.class);
     private final AuthenticationManager authenticationManager;
     private final JWTService jwtService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     //constructor
 
-    public UserService(JWTService jwtService, @Lazy AuthenticationManager authenticationManager, UserRepo userRepo, JavaMailSender mailSender, PendingUserRepository pendingUserRepo) {
+    public UserService(JWTService jwtService, @Lazy AuthenticationManager authenticationManager,
+                       PasswordResetTokenRepository passwordResetTokenRepository,UserRepo userRepo, JavaMailSender mailSender, PendingUserRepository pendingUserRepo) {
         this.mailSender = mailSender;
         this.userRepo = userRepo;
         this.pendingUserRepo = pendingUserRepo;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     //this function or method does the singUp business logic
@@ -106,9 +113,12 @@ public class UserService implements UserDetailsService {
 
     }
 
+
     public String login(LoginRequest loginRequest) throws ServerException {
         try {
-            Authentication authentication = authenticationManager.authenticate(
+
+            //authentication
+            authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
                             loginRequest.getPassword()
@@ -117,9 +127,7 @@ public class UserService implements UserDetailsService {
             return jwtService.generateToken(loginRequest.getEmail());
 
         } catch (Exception e) {
-            // ✅ CRITICAL FIX: If it's a Spring Security authentication exception
-            // (BadCredentials, Disabled, Locked, etc.), DO NOT wrap it.
-            // Let it bubble up to the controller AS-IS.
+
             if (e instanceof AuthenticationException) {
                 throw (AuthenticationException) e;
             }
@@ -167,7 +175,52 @@ public class UserService implements UserDetailsService {
 
     }
 
-    private void sendEmail(String emailToSendTo, String subject, String text) {
+
+    @Transactional
+    public void forgotPassword(String email) throws NotFoundException, ServerException {
+        try {
+            Optional<User> optionalUser = userRepo.findByEmail(email);
+            if (optionalUser.isEmpty()) {
+                logger.warn("Password reset requested for non-existent email: {}", email);
+                return; // security: silent return
+            }
+
+            User user = optionalUser.get();
+
+            // ✅ Check if token already exists
+            Optional<PasswordResetToken> existingTokenOpt = passwordResetTokenRepository.findByUser(user);
+
+            PasswordResetToken passwordResetToken;
+            if (existingTokenOpt.isPresent()) {
+                // ✅ UPDATE existing token
+                passwordResetToken = existingTokenOpt.get();
+                passwordResetToken.setToken(UUID.randomUUID().toString());
+                passwordResetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
+                logger.info("Updated existing token for user: {}", email);
+            } else {
+                // ✅ CREATE new token
+                passwordResetToken = new PasswordResetToken();
+                passwordResetToken.setToken(UUID.randomUUID().toString());
+                passwordResetToken.setUser(user);
+                passwordResetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
+                logger.info("Created new token for user: {}", email);
+            }
+
+            // Save (this will be UPDATE if existing, INSERT if new)
+            passwordResetTokenRepository.save(passwordResetToken);
+
+            // Send email
+            String resetUrl = "http://localhost:5173/reset-password?token=" + passwordResetToken.getToken();
+            String emailBody = "Click the link below to reset your password:\n" + resetUrl;
+            sendEmail(email, "Chat System Password Reset", emailBody);
+
+            logger.info("Password reset email sent to: {}", email);
+
+        } catch (Exception exception) {
+            logger.error("Failed to process forgot password for email: {}", email, exception);
+            throw new ServerException("Unable to process password reset request. Please try again.");
+        }
+    }  private void sendEmail(String emailToSendTo, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(emailToSendTo);
         message.setSubject(subject);
