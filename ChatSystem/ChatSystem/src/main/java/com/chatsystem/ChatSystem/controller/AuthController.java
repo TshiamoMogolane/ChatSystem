@@ -1,5 +1,6 @@
 package com.chatsystem.ChatSystem.controller;
 
+import com.chatsystem.ChatSystem.dto.EmailRequest;
 import com.chatsystem.ChatSystem.dto.LoginRequest;
 import com.chatsystem.ChatSystem.dto.SignUpRequest;
 import com.chatsystem.ChatSystem.dto.VerifyRequest;
@@ -111,4 +112,22 @@ public class AuthController {
         }
 
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody EmailRequest email){
+
+        try{
+
+            userService.forgotPassword(email.getEmail());
+            return new ResponseEntity<>(HttpStatus.OK);
+
+        }catch(Exception exception){
+
+            logger.error("Something went wrong with the server ",exception);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }
+
+    }
+
 }
