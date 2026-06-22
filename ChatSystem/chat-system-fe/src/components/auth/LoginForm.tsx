@@ -32,21 +32,23 @@ export default function LoginForm() {
       const response = await authService.login({ email, password });
 
       // 2. If successful (status 200 OK), the HttpOnly cookie is now stored in the browser.
-      console.log('Login successful:', response.data); // "Login Successful"
+      console.log('Login successful:', response.data); // "Login Successful without"
 
       // 3. Redirect the user to the dashboard (or home page)
-      navigate('/dashboard'); // Change '/dashboard' to your actual home route
+      navigate('/dashboard'); // Change '/dashboard' to your actual home route buut not yet implemented
 
     } catch (err: any) {
       // 4. Handle errors gracefully
       console.error('Login error:', err);
 
       if (err.response) {
-        
-        
-        const status = err.response.status;
-        const message = err.response.data; 
 
+
+        const status = err.response.status;
+        const message = err.response.data;
+
+        // conditions to set error messages according to status code
+        
         if (status === 401) {
           setError('Invalid email or password. Please try again.');
         }

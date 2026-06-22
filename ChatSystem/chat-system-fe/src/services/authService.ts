@@ -24,6 +24,11 @@ export interface Login {
 
 }
 
+//this is for forget password
+export interface EmailRequest{
+  email:string,
+}
+
 // verity request for opt 
 export interface VerifyRequest{
   email:string;
@@ -38,6 +43,9 @@ export const authService = {
 
   // this is for the communication with the backend for login
   login: (login: Login) => apiClient.post('/auth/login', login),
+
+  // this is for the communicationwith the backed for forgot password in page forgot password
+  forgotPassword: (emailRequest: EmailRequest) => apiClient.post('/auth/forgot-password',  emailRequest ),
 
   //this is for the communication with the backend for opt verification
   verifyOtp: (verifyRequest: VerifyRequest) => apiClient.post('/auth/verify', verifyRequest),
