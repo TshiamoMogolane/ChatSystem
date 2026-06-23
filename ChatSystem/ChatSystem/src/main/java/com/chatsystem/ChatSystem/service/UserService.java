@@ -179,26 +179,31 @@ public class UserService implements UserDetailsService {
     @Transactional
     public void forgotPassword(String email) throws NotFoundException, ServerException {
         try {
+
+
             Optional<User> optionalUser = userRepo.findByEmail(email);
             if (optionalUser.isEmpty()) {
+                // user does not exist
                 logger.warn("Password reset requested for non-existent email: {}", email);
                 return; // security: silent return
             }
 
+            // if user exist
             User user = optionalUser.get();
 
-            // ✅ Check if token already exists
+            // Check if token already exists
             Optional<PasswordResetToken> existingTokenOpt = passwordResetTokenRepository.findByUser(user);
 
             PasswordResetToken passwordResetToken;
+
             if (existingTokenOpt.isPresent()) {
-                // ✅ UPDATE existing token
+                //UPDATE existing token
                 passwordResetToken = existingTokenOpt.get();
                 passwordResetToken.setToken(UUID.randomUUID().toString());
                 passwordResetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
                 logger.info("Updated existing token for user: {}", email);
             } else {
-                // ✅ CREATE new token
+                // CREATE new token
                 passwordResetToken = new PasswordResetToken();
                 passwordResetToken.setToken(UUID.randomUUID().toString());
                 passwordResetToken.setUser(user);
@@ -212,6 +217,7 @@ public class UserService implements UserDetailsService {
             // Send email
             String resetUrl = "http://localhost:5173/reset-password?token=" + passwordResetToken.getToken();
             String emailBody = "Click the link below to reset your password:\n" + resetUrl;
+            //calling private/helper method for sending email
             sendEmail(email, "Chat System Password Reset", emailBody);
 
             logger.info("Password reset email sent to: {}", email);
@@ -220,7 +226,33 @@ public class UserService implements UserDetailsService {
             logger.error("Failed to process forgot password for email: {}", email, exception);
             throw new ServerException("Unable to process password reset request. Please try again.");
         }
-    }  private void sendEmail(String emailToSendTo, String subject, String text) {
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword)
+            throws NotFoundException, ServerException, IllegalArgumentException {
+
+        // finding passwordResetToken by token
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new NotFoundException("Invalid or expired token."));
+
+        // Check expiry
+        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Token has expired.");
+        }
+
+        User user = resetToken.getUser();
+        // Encode the new password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepo.save(user);
+
+        // delete the token after use
+        passwordResetTokenRepository.delete(resetToken);
+
+    }
+
+    // helper method for sending email
+    private void sendEmail(String emailToSendTo, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(emailToSendTo);
         message.setSubject(subject);
