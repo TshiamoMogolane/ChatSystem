@@ -1,5 +1,6 @@
 package com.chatsystem.ChatSystem.model;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -11,12 +12,15 @@ public class PasswordResetToken {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(nullable = false)
     private String token;
 
+    @Column(nullable = false)
     @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
     @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
+    @Column(nullable = false)
     private LocalDateTime expiryDate;
 
     public PasswordResetToken() {
