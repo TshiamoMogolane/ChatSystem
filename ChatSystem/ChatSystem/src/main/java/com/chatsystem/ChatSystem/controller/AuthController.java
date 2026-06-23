@@ -1,9 +1,6 @@
 package com.chatsystem.ChatSystem.controller;
 
-import com.chatsystem.ChatSystem.dto.EmailRequest;
-import com.chatsystem.ChatSystem.dto.LoginRequest;
-import com.chatsystem.ChatSystem.dto.SignUpRequest;
-import com.chatsystem.ChatSystem.dto.VerifyRequest;
+import com.chatsystem.ChatSystem.dto.*;
 import com.chatsystem.ChatSystem.exception.AlreadyFoundException;
 import com.chatsystem.ChatSystem.exception.NotFoundException;
 import com.chatsystem.ChatSystem.exception.ServerException;
@@ -21,6 +18,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -74,6 +73,23 @@ public class AuthController {
         }
 
 
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        try {
+            userService.resetPassword(request.getToken(), request.getNewPassword());
+            return ResponseEntity.ok().body(Map.of("message", "Password reset successful."));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (ServerException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Server error. Please try again."));
+        }
     }
 
     @PostMapping("/signup")
