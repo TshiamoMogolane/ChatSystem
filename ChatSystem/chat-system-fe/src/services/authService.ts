@@ -54,6 +54,10 @@ export const authService = {
   resendOtp: ({ email }: { email: string }) =>
     axios.post('/auth/resend-otp', { email }),
 
+  //this is for the communication with the backend for password reset 
+  resetPassword: (data: { token: string; newPassword: string }) =>
+    apiClient.post('/auth/reset-password', data),
+
 };
 
 
