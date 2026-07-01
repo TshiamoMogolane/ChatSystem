@@ -114,36 +114,38 @@ public class UserService implements UserDetailsService {
 
 
     public String login(LoginRequest loginRequest) throws Exception {
-        Optional<User> userOpt = userRepo.findByEmail(loginRequest.getEmail());
-        if (userOpt.isEmpty()) {
-            throw new BadCredentialsException("Invalid credentials");
-        }
-        //Gets the actual object
-        User user = userOpt.get();
 
-        // Check lockout
-        if (user.getLockoutTime() != null && user.getLockoutTime().isAfter(LocalDateTime.now())) {
-            throw new AccountLockedException("Account locked. Try again after " + user.getLockoutTime());
-        }
+        User user = userRepo.findByEmail(loginRequest.getEmail()).orElse(null);
 
         try {
-            // auth
+
+            if ((user.getLockoutTime() != null) && user.getLockoutTime().isAfter(LocalDateTime.now())) {
+                throw new AccountLockedException("Account locked. Try again after " + user.getLockoutTime());
+            }
+
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
             );
+
             // Reset attempts on success
             user.setFailedLoginAttempts(0);
             user.setLockoutTime(null);
             userRepo.save(user);
             return jwtService.generateToken(loginRequest.getEmail());
+
         } catch (AuthenticationException e) {
             // Increment failures
+
             user.setFailedLoginAttempts(user.getFailedLoginAttempts() + 1);
+
             if (user.getFailedLoginAttempts() >= 5) {
                 user.setLockoutTime(LocalDateTime.now().plusMinutes(30));
             }
+
             userRepo.save(user);
-            throw e; // rethrow to be handled by controller
+
+            throw new BadCredentialsException("invalid Credentials ");
+
         }
     }
     @Transactional
