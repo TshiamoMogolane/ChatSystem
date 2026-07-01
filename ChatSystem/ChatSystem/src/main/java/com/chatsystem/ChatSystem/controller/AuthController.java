@@ -5,6 +5,7 @@ import com.chatsystem.ChatSystem.exception.AlreadyFoundException;
 import com.chatsystem.ChatSystem.exception.NotFoundException;
 import com.chatsystem.ChatSystem.exception.ServerException;
 import com.chatsystem.ChatSystem.service.UserService;
+import jakarta.validation.Valid;
 import org.antlr.v4.runtime.InputMismatchException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +26,9 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private Logger logger = LoggerFactory.getLogger(AuthController.class);
+    private final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    private UserService userService;
+    private final UserService userService;
 
     public AuthController(UserService userService){
 
@@ -37,7 +38,7 @@ public class AuthController {
 
     //login api
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest){
+    public ResponseEntity<?> login(@RequestBody @Valid  LoginRequest loginRequest){
 
         try {
 

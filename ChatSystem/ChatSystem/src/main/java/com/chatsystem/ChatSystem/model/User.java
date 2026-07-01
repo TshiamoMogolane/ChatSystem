@@ -32,7 +32,27 @@ public class User {
 
     private boolean enabled = false;
 
+    private int failedLoginAttempts;
+
+    private LocalDateTime lockoutTime;
+
     public User() {
+    }
+
+    public int getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    public void setFailedLoginAttempts(int failedLoginAttempts) {
+        this.failedLoginAttempts = failedLoginAttempts;
+    }
+
+    public LocalDateTime getLockoutTime() {
+        return lockoutTime;
+    }
+
+    public void setLockoutTime(LocalDateTime lockoutTime) {
+        this.lockoutTime = lockoutTime;
     }
 
     public String getPassword() {

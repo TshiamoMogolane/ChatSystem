@@ -1,5 +1,4 @@
 package com.chatsystem.ChatSystem.service;
-
 import com.chatsystem.ChatSystem.dto.LoginRequest;
 import com.chatsystem.ChatSystem.dto.PendingUser;
 import com.chatsystem.ChatSystem.dto.SignUpRequest;
@@ -19,16 +18,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import javax.security.auth.login.AccountLockedException;
 import java.time.LocalDateTime;
 import java.util.InputMismatchException;
 import java.util.Optional;
@@ -114,27 +113,37 @@ public class UserService implements UserDetailsService {
     }
 
 
-    public String login(LoginRequest loginRequest) throws ServerException {
+    public String login(LoginRequest loginRequest) throws Exception {
+        Optional<User> userOpt = userRepo.findByEmail(loginRequest.getEmail());
+        if (userOpt.isEmpty()) {
+            throw new BadCredentialsException("Invalid credentials");
+        }
+        //Gets the actual object
+        User user = userOpt.get();
+
+        // Check lockout
+        if (user.getLockoutTime() != null && user.getLockoutTime().isAfter(LocalDateTime.now())) {
+            throw new AccountLockedException("Account locked. Try again after " + user.getLockoutTime());
+        }
+
         try {
-
-            //authentication
+            // auth
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getEmail(),
-                            loginRequest.getPassword()
-                    )
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
             );
+            // Reset attempts on success
+            user.setFailedLoginAttempts(0);
+            user.setLockoutTime(null);
+            userRepo.save(user);
             return jwtService.generateToken(loginRequest.getEmail());
-
-        } catch (Exception e) {
-
-            if (e instanceof AuthenticationException) {
-                throw (AuthenticationException) e;
+        } catch (AuthenticationException e) {
+            // Increment failures
+            user.setFailedLoginAttempts(user.getFailedLoginAttempts() + 1);
+            if (user.getFailedLoginAttempts() >= 5) {
+                user.setLockoutTime(LocalDateTime.now().plusMinutes(30));
             }
-
-            // ✅ Only wrap genuine server errors (DB down, network failure, etc.)
-            logger.error("Server error during login", e);
-            throw new ServerException("Something went wrong with the server");
+            userRepo.save(user);
+            throw e; // rethrow to be handled by controller
         }
     }
     @Transactional
