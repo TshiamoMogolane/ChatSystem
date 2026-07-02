@@ -1,6 +1,9 @@
-export default function Topbar({ activeTab }) {
+export default function Topbar({ activeTab }: { activeTab: string }) {
   return (
-    <div className="bg-white border-bottom p-3 d-flex justify-content-between align-items-center flex-shrink-0">
+    <div
+      className="bg-white border-bottom p-3 d-flex justify-content-between align-items-center flex-shrink-0"
+      style={{ height: '72px' }}  // 👈 fixed height for precise alignment
+    >
       <h5 className="m-0 fw-semibold">
         {activeTab === 'chat' ? 'Your Conversations' : 'Find Friends'}
       </h5>
