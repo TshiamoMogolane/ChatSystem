@@ -2,6 +2,7 @@ package com.chatsystem.ChatSystem.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class LoginRequest {
@@ -12,6 +13,8 @@ public class LoginRequest {
 
     @NotBlank(message="password required ")
     @Size(min = 8 , message ="password must be at least 8 characters long")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{8,20}$",
+            message = "Password must have 1 uppercase, 1 lowercase, 1 digit, 1 special char, and be 8-20 chars")
     private String password;
 
     public LoginRequest() {

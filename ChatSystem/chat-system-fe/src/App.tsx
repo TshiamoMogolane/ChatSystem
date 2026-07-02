@@ -3,9 +3,8 @@ import AuthPage from './pages/AuthPage';
 import ForgotPassword from './pages/ForgotPassword';
 import VerifyOTP from './pages/VerifyOTP';
 import ResetPassword from './pages/ResetPassword';
-
+import Dashboard from './pages/Dashboard';
 // Placeholder for future pages (e.g., Dashboard)
-const Dashboard = () => <h1>Dashboard (after login)</h1>;
 
 function App() {
   return (

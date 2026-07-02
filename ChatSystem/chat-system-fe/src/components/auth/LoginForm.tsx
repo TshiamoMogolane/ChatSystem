@@ -61,7 +61,7 @@ export default function LoginForm() {
         }
       } else if (err.request) {
         // The request was made but no response was received (e.g., network down)
-        setError('Cannot connect to the server. Please check your network.');
+        setError('Please check your network.');
       } else {
         // Something else happened
         setError('An unexpected error occurred.');
