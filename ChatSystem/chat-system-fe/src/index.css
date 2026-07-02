@@ -36,7 +36,43 @@ body {
   max-width: 450px;
   margin: 1rem;
 }
+/* Sidebar button base - ALL ICONS ARE BLUE */
+.sidebar-btn {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--primary); /* 🔵 All icons are now your system blue */
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent; /* Space for active underline */
+  font-size: 1.5rem;
+  padding: 0;
+}
 
+/* Hover: Light blue rounded background, icon stays blue */
+.sidebar-btn:hover {
+  background-color: var(--primary-light);
+  color: var(--primary); /* Keep blue on hover */
+}
+
+/* Active state: Darker blue icon + darker blue underline */
+.sidebar-btn.active {
+  color: var(--primary-dark); /* Deeper blue for active */
+  border-bottom-color: var(--primary-dark); /* Blue underline */
+}
+
+/* ❌ DELETE THIS ENTIRE BLOCK from your CSS:
+   It uses an undefined variable and breaks the hover above!
+
+.sidebar-btn:hover {
+  background-color: var(--social-bg) !important;
+}
+*/
 /* Toggle buttons */
 .toggle-buttons {
   display: flex;
@@ -121,3 +157,5 @@ button[type="submit"]:hover {
     padding: 1.5rem;
   }
 }
+
+
