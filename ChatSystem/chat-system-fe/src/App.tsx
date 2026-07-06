@@ -4,23 +4,26 @@ import ForgotPassword from './pages/ForgotPassword';
 import VerifyOTP from './pages/VerifyOTP';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
-// Placeholder for future pages (e.g., Dashboard)
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Root path shows the auth toggle page */}
         <Route path="/" element={<AuthPage />} />
-
-        {/* Example protected route – you can add later */}
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOTP />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+
+        {/* Main app routes – all render Dashboard which reads the URL */}
+        <Route path="/chat" element={<Dashboard />} />
+        <Route path="/friends" element={<Dashboard />} />
+        <Route path="/friends/suggestions" element={<Dashboard />} />
+        <Route path="/friends/requests" element={<Dashboard />} />
+
+        {/* Redirect old /dashboard to /chat */}
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
 export default App;

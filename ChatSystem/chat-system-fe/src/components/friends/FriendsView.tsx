@@ -1,22 +1,20 @@
-import { useState } from 'react';
-
 interface Friend {
   id: string;
   name: string;
   email: string;
   online: boolean;
-  status: 'connected' | 'pending' | 'suggested'; // new field
+  status: 'connected' | 'pending' | 'suggested';
 }
 
 interface FriendsViewProps {
   friends: Friend[];
-  onConnect: (id: string) => void;                 // for suggestions
-  onAcceptRequest: (id: string) => void;           // for requests
-  onDeclineRequest: (id: string) => void;          // for requests
-  onMessageFriend: (id: string) => void;           // for connected friends
+  onConnect: (id: string) => void;
+  onAcceptRequest: (id: string) => void;
+  onDeclineRequest: (id: string) => void;
+  onMessageFriend: (id: string) => void;
+  activeTab: 'friends' | 'requests' | 'suggestions';
+  onTabChange: (tab: 'friends' | 'requests' | 'suggestions') => void;
 }
-
-type Tab = 'friends' | 'requests' | 'suggestions';
 
 export default function FriendsView({
   friends,
@@ -24,9 +22,9 @@ export default function FriendsView({
   onAcceptRequest,
   onDeclineRequest,
   onMessageFriend,
+  activeTab,
+  onTabChange,
 }: FriendsViewProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('friends');
-
   const getList = () => {
     switch (activeTab) {
       case 'friends':
@@ -44,14 +42,14 @@ export default function FriendsView({
 
   return (
     <div className="h-100 d-flex flex-column bg-white rounded-3 shadow-sm border overflow-hidden">
-      {/* Horizontal Tab Bar – buttons centered */}
+      {/* Horizontal Tab Bar */}
       <div className="p-3 border-bottom d-flex align-items-center bg-white flex-shrink-0">
         <div className="d-flex gap-2 justify-content-center flex-grow-1">
           <button
             className={`btn btn-sm ${
               activeTab === 'friends' ? 'btn-primary' : 'btn-outline-secondary'
             }`}
-            onClick={() => setActiveTab('friends')}
+            onClick={() => onTabChange('friends')}
           >
             👥 All Friends
           </button>
@@ -59,7 +57,7 @@ export default function FriendsView({
             className={`btn btn-sm ${
               activeTab === 'requests' ? 'btn-primary' : 'btn-outline-secondary'
             }`}
-            onClick={() => setActiveTab('requests')}
+            onClick={() => onTabChange('requests')}
           >
             📨 Requests
           </button>
@@ -67,7 +65,7 @@ export default function FriendsView({
             className={`btn btn-sm ${
               activeTab === 'suggestions' ? 'btn-primary' : 'btn-outline-secondary'
             }`}
-            onClick={() => setActiveTab('suggestions')}
+            onClick={() => onTabChange('suggestions')}
           >
             💡 Suggestions
           </button>
@@ -81,7 +79,7 @@ export default function FriendsView({
           <p className="text-muted text-center">No users in this category</p>
         ) : (
           <div className="d-flex flex-column gap-3">
-            {displayedFriends.map((friend) => (
+            {displayedFriends.map(friend => (
               <div
                 key={friend.id}
                 className="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 border"
@@ -99,7 +97,6 @@ export default function FriendsView({
                   </div>
                 </div>
 
-                {/* Conditional buttons based on status */}
                 <div className="d-flex gap-2">
                   {friend.status === 'connected' && (
                     <button
