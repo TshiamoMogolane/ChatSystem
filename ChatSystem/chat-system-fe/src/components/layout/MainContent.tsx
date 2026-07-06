@@ -1,7 +1,16 @@
 import ChatView from '../chat/ChatView';
 import FriendsView from '../friends/FriendsView';
 
-export default function MainContent({ activeTab, contacts, allUsers, onConnect }) {
+type User = any;
+
+interface MainContentProps {
+  activeTab: 'chat' | 'friends' | string;
+  contacts: User[];
+  allUsers: User[];
+  onConnect: (userId: string) => void;
+}
+
+export default function MainContent({ activeTab, contacts, allUsers, onConnect }: MainContentProps) {
   return (
     <div className="flex-grow-1 p-4 bg-light overflow-auto">
       {activeTab === 'chat' ? (
