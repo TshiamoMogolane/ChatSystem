@@ -1,13 +1,4 @@
-import axios from 'axios';
-
-//this is my base url 
-const API_BASE_URL = 'http://localhost:8080/api';
-
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
-  withCredentials: true, 
-});
+import apiClient from './axios';
 
 //signUp userData 
 export interface UserData {
@@ -52,7 +43,7 @@ export const authService = {
 
   //this is for the communication with the backend for email resend 
   resendOtp: ({ email }: { email: string }) =>
-    axios.post('/auth/resend-otp', { email }),
+    apiClient.post('/auth/resend-otp', { email }),
 
   //this is for the communication with the backend for password reset 
   resetPassword: (data: { token: string; newPassword: string }) =>
