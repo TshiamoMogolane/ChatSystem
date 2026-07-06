@@ -55,11 +55,11 @@ public class JWTService {
 
     private <T> T extractClaim(String token , Function<Claims,T> claimResolver){
 
-        final Claims claims = extractAllCaims(token);
+        final Claims claims = extractAllClaims(token);
         return claimResolver.apply(claims);
     }
 
-    private Claims extractAllCaims (String token){
+    private Claims extractAllClaims (String token){
         return Jwts.parser().verifyWith(getKey())
                 .build()
                 .parseSignedClaims(token)
