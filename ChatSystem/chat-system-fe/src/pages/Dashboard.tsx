@@ -12,19 +12,51 @@ export default function Dashboard() {
     { id: 2, name: 'Bob Smith', email: 'bob@example.com', online: false },
   ];
 
-  // 👇 LIST B: ALL registered users on the system (Shows in Friends/Connect tab)
-  // Notice Charlie is here but NOT in myContacts - so we can "Connect" with him.
-  const allUsers = [
-    { id: 1, name: 'Alice Johnson', email: 'alice@example.com', online: true }, // Already friend
-    { id: 2, name: 'Bob Smith', email: 'bob@example.com', online: false },     // Already friend
-    { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', online: true }, // Not a friend yet!
-    { id: 4, name: 'Diana Prince', email: 'diana@example.com', online: false },   // Not a friend yet!
+  // 👇 LIST B: Pending friend requests (sent by others to me)
+  const pendingRequests = [
+    { id: 5, name: 'Eve Adams', email: 'eve@example.com', online: true },
   ];
 
-  const handleConnect = (friendId: any) => {
+  // 👇 LIST C: ALL registered users on the system (including friends and pending)
+  // We'll combine them and assign status.
+  const allUsers = [
+    { id: 1, name: 'Alice Johnson', email: 'alice@example.com', online: true }, // Already friend
+    { id: 2, name: 'Bob Smith', email: 'bob@example.com', online: false },      // Already friend
+    { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', online: true }, // Not a friend (suggestion)
+    { id: 4, name: 'Diana Prince', email: 'diana@example.com', online: false },   // Not a friend (suggestion)
+    { id: 5, name: 'Eve Adams', email: 'eve@example.com', online: true },         // Has sent a request (pending)
+  ];
+
+  // Build the combined list with status
+  const allUsersWithStatus = allUsers.map(user => {
+    if (myContacts.some(c => c.id === user.id)) {
+      return { ...user, status: 'connected' as const };
+    } else if (pendingRequests.some(p => p.id === user.id)) {
+      return { ...user, status: 'pending' as const };
+    } else {
+      return { ...user, status: 'suggested' as const };
+    }
+  });
+
+  // Handlers
+  const handleConnect = (friendId: number) => {
     alert(`Sending connect request to user ID: ${friendId}`);
-    // Later, this will send a POST request to your backend.
-    // If accepted, this user will move from 'allUsers' to 'myContacts'!
+    // Later: POST /api/friend-requests
+  };
+
+  const handleAcceptRequest = (friendId: number) => {
+    alert(`Accepting friend request from user ID: ${friendId}`);
+    // Later: POST /api/friend-requests/accept
+  };
+
+  const handleDeclineRequest = (friendId: number) => {
+    alert(`Declining friend request from user ID: ${friendId}`);
+    // Later: POST /api/friend-requests/decline
+  };
+
+  const handleMessageFriend = (friendId: number) => {
+    alert(`Opening chat with user ID: ${friendId}`);
+    // Later: navigate to chat or open a chat window
   };
 
   return (
@@ -35,11 +67,14 @@ export default function Dashboard() {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="d-flex flex-column flex-grow-1" style={{ height: '100vh' }}>
         <Topbar activeTab={activeTab} />
-        <MainContent 
-          activeTab={activeTab} 
-          contacts={myContacts}       // 👈 Pass existing friends to Chat
-          allUsers={allUsers}         // 👈 Pass all users to Find Friends
-          onConnect={handleConnect} 
+        <MainContent
+          activeTab={activeTab}
+          contacts={myContacts}                      // for ChatView
+          allUsers={allUsersWithStatus}             // for FriendsView (with status)
+          onConnect={handleConnect}
+          onAcceptRequest={handleAcceptRequest}
+          onDeclineRequest={handleDeclineRequest}
+          onMessageFriend={handleMessageFriend}
         />
       </div>
     </div>
