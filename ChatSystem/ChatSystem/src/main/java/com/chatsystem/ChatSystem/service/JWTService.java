@@ -37,7 +37,7 @@ public class JWTService {
                 .add(claims)
                 .subject(email)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 *1))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .and()
                 .signWith(getKey())
                 .compact();
@@ -71,6 +71,15 @@ public class JWTService {
         final String userName = extractUserName(token);
         return (userName.equals(userDetails.getUsername())&& !isTokenExpired(token));
 
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().verifyWith(getKey()).build().parseSignedClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private boolean isTokenExpired(String token ){
