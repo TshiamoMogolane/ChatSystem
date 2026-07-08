@@ -2,7 +2,7 @@ interface Friend {
   id: string;
   name: string;
   email: string;
-  online: boolean;
+  online: boolean;          // kept for data consistency but not displayed
   status: 'connected' | 'pending' | 'suggested';
 }
 
@@ -73,63 +73,70 @@ export default function FriendsView({
         <span className="text-muted small ms-2">{displayedFriends.length} users</span>
       </div>
 
-      {/* Scrollable list */}
+      {/* Scrollable grid */}
       <div className="flex-grow-1 overflow-auto p-4">
         {displayedFriends.length === 0 ? (
           <p className="text-muted text-center">No users in this category</p>
         ) : (
-          <div className="d-flex flex-column gap-3">
+          <div className="row g-3">
             {displayedFriends.map(friend => (
               <div
                 key={friend.id}
-                className="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 border"
+                className="col-12 col-sm-6 col-md-4 col-lg-3"
               >
-                <div className="d-flex align-items-center gap-3">
-                  <div
-                    className={`rounded-circle ${
-                      friend.online ? 'bg-success' : 'bg-secondary'
-                    }`}
-                    style={{ width: '10px', height: '10px' }}
-                  />
-                  <div>
-                    <p className="fw-medium m-0 text-dark">{friend.name}</p>
-                    <small className="text-muted">{friend.email}</small>
-                  </div>
-                </div>
+                <div className="card h-100 shadow-sm border-0 bg-light">
+                  <div className="card-body d-flex flex-column align-items-center text-center">
+                    {/* Avatar only – no online dot */}
+                    <div
+                      className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mb-2"
+                      style={{
+                        width: '64px',
+                        height: '64px',
+                        fontSize: '1.5rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {friend.name.charAt(0).toUpperCase()}
+                    </div>
 
-                <div className="d-flex gap-2">
-                  {friend.status === 'connected' && (
-                    <button
-                      onClick={() => onMessageFriend(friend.id)}
-                      className="btn btn-success btn-sm fw-medium rounded-3"
-                    >
-                      💬 Message
-                    </button>
-                  )}
-                  {friend.status === 'pending' && (
-                    <>
-                      <button
-                        onClick={() => onAcceptRequest(friend.id)}
-                        className="btn btn-primary btn-sm fw-medium rounded-3"
-                      >
-                        ✓ Accept
-                      </button>
-                      <button
-                        onClick={() => onDeclineRequest(friend.id)}
-                        className="btn btn-outline-danger btn-sm fw-medium rounded-3"
-                      >
-                        ✕ Decline
-                      </button>
-                    </>
-                  )}
-                  {friend.status === 'suggested' && (
-                    <button
-                      onClick={() => onConnect(friend.id)}
-                      className="btn btn-primary btn-sm fw-medium rounded-3"
-                    >
-                      Connect
-                    </button>
-                  )}
+                    <h6 className="card-title mb-0 text-dark">{friend.name}</h6>
+                    <small className="text-muted">{friend.email}</small>
+
+                    <div className="mt-3 d-flex gap-2 flex-wrap justify-content-center">
+                      {friend.status === 'connected' && (
+                        <button
+                          onClick={() => onMessageFriend(friend.id)}
+                          className="btn btn-success btn-sm fw-medium rounded-3"
+                        >
+                          💬 Message
+                        </button>
+                      )}
+                      {friend.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => onAcceptRequest(friend.id)}
+                            className="btn btn-primary btn-sm fw-medium rounded-3"
+                          >
+                            ✓ Accept
+                          </button>
+                          <button
+                            onClick={() => onDeclineRequest(friend.id)}
+                            className="btn btn-outline-danger btn-sm fw-medium rounded-3"
+                          >
+                            ✕ Decline
+                          </button>
+                        </>
+                      )}
+                      {friend.status === 'suggested' && (
+                        <button
+                          onClick={() => onConnect(friend.id)}
+                          className="btn btn-primary btn-sm fw-medium rounded-3"
+                        >
+                          Connect
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
