@@ -30,6 +30,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    private LocalDateTime lastActive;
+    // getters & setters
     private boolean enabled = false;
 
     private int failedLoginAttempts;
@@ -37,6 +39,14 @@ public class User {
     private LocalDateTime lockoutTime;
 
     public User() {
+    }
+
+    public LocalDateTime getLastActive() {
+        return lastActive;
+    }
+
+    public void setLastActive(LocalDateTime lastActive) {
+        this.lastActive = lastActive;
     }
 
     public int getFailedLoginAttempts() {

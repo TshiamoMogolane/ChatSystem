@@ -14,11 +14,13 @@ function App() {
         <Route path="/verify-otp" element={<VerifyOTP />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Main app routes – all render Dashboard which reads the URL */}
+        {/* Main app routes */}
         <Route path="/chat" element={<Dashboard />} />
         <Route path="/friends" element={<Dashboard />} />
-        <Route path="/friends/suggestions" element={<Dashboard />} />
+        <Route path="/friends/home" element={<Dashboard />} />
+        <Route path="/friends/all-friends" element={<Dashboard />} />
         <Route path="/friends/requests" element={<Dashboard />} />
+        <Route path="/friends/suggestions" element={<Dashboard />} />
 
         {/* Redirect old /dashboard to /chat */}
         <Route path="/dashboard" element={<Dashboard />} />
