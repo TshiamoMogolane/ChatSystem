@@ -1,4 +1,5 @@
 package com.chatsystem.ChatSystem.service;
+import com.chatsystem.ChatSystem.dto.FriendResponseDTO;
 import com.chatsystem.ChatSystem.dto.LoginRequest;
 import com.chatsystem.ChatSystem.dto.PendingUser;
 import com.chatsystem.ChatSystem.dto.SignUpRequest;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import javax.security.auth.login.AccountLockedException;
 import java.time.LocalDateTime;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -239,6 +241,7 @@ public class UserService implements UserDetailsService {
         }
     }
 
+
     @Transactional
     public void resetPassword(String token, String newPassword)
             throws NotFoundException, ServerException, IllegalArgumentException {
@@ -262,6 +265,19 @@ public class UserService implements UserDetailsService {
 
     }
 
+    public User  findUser(String email){
+        try{
+            Optional<User> userOptional = userRepo.findByEmail(email);
+
+            if(userOptional.isEmpty()){
+                throw new NotFoundException("");
+            }
+            return userOptional.get();
+        } catch (NotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
     // helper method for sending email
     private void sendEmail(String emailToSendTo, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
