@@ -66,7 +66,6 @@ public class FriendController {
     public ResponseEntity<?> sendRequest(
             @AuthenticationPrincipal UserDetails userDetails ,
             @RequestParam String addresseeId) {
-
         User currentUser = userService.findUser(userDetails.getUsername());
         friendService.sendFriendRequest(currentUser.getId(), addresseeId);
         return ResponseEntity.ok().build();
@@ -88,6 +87,7 @@ public class FriendController {
     public ResponseEntity<?> declineRequest(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String connectionId) {
+        System.out.println("I must have a different ");
         friendService.declineRequest(connectionId);
         return ResponseEntity.ok().build();
 
