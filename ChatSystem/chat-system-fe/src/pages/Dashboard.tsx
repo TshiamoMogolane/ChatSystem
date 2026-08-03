@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import Topbar from '../components/layout/Topbar';
@@ -45,6 +45,54 @@ export default function Dashboard() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
+  // ---- Notification state ----
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // ---- Loading & requested states for Connect button ----
+  const [loadingFriendIds, setLoadingFriendIds] = useState<Set<string>>(new Set());
+  const [requestedFriendIds, setRequestedFriendIds] = useState<Set<string>>(new Set());
+
+  // Ref for timeout to clear on unmount
+  const refetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto‑dismiss notification after 3 seconds
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (refetchTimeoutRef.current) {
+        clearTimeout(refetchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setNotification({ message, type });
+  };
+
+  // ---- Helper to get friend name by ID ----
+  const getFriendName = (friendId: string): string => {
+    // Search in allUsers (used for paginated tabs)
+    const fromAll = allUsers.find(f => f.id === friendId);
+    if (fromAll) return fromAll.name;
+
+    // Search in homeSummary suggestions (home tab)
+    if (homeSummary) {
+      const fromSuggestions = homeSummary.suggestions.find(f => f.id === friendId);
+      if (fromSuggestions) return fromSuggestions.name;
+      // Also check pending (though not needed for connect)
+      const fromPending = homeSummary.pending.find(f => f.id === friendId);
+      if (fromPending) return fromPending.name;
+    }
+    return 'user'; // fallback
+  };
+
   // ---- Fetch data when subTab changes ----
   useEffect(() => {
     if (activeTab !== 'friends') return;
@@ -56,7 +104,7 @@ export default function Dashboard() {
         if (subTab === 'home') {
           const res = await friendApi.getHomeSummary();
           setHomeSummary(res.data);
-          setAllUsers([]); // not used on home
+          setAllUsers([]);
         } else {
           let response;
           switch (subTab) {
@@ -72,7 +120,6 @@ export default function Dashboard() {
             default:
               return;
           }
-          // If page === 0, replace; else append
           if (page === 0) {
             setAllUsers(response.data.content);
           } else {
@@ -92,49 +139,84 @@ export default function Dashboard() {
 
   // ---- Handlers for actions ----
   const handleConnect = async (friendId: string) => {
+    // Get friend name for personalized notification
+    const friendName = getFriendName(friendId);
+
+    // Set loading for this friend
+    setLoadingFriendIds(prev => new Set(prev).add(friendId));
     try {
       await friendApi.sendConnectRequest(friendId);
-      alert('Friend request sent!');
-      // Optionally refetch suggestions
+      showNotification(`Friend request sent to ${friendName}!`, 'success');
+      // Mark as requested so the button shows "Sent"
+      setRequestedFriendIds(prev => new Set(prev).add(friendId));
+
+      // Clear any existing timeout
+      if (refetchTimeoutRef.current) {
+        clearTimeout(refetchTimeoutRef.current);
+        refetchTimeoutRef.current = null;
+      }
+
+      // Delay refetch to allow "Sent" to be visible for 1.5 seconds
+      refetchTimeoutRef.current = setTimeout(() => {
+        if (subTab === 'suggestions') {
+          setPage(0);
+        } else if (subTab === 'home') {
+          friendApi.getHomeSummary().then(res => setHomeSummary(res.data));
+        }
+        refetchTimeoutRef.current = null;
+      }, 1500);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to send request');
+      showNotification(err.response?.data?.message || 'Failed to send request', 'error');
+    } finally {
+      // Remove loading state
+      setLoadingFriendIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(friendId);
+        return newSet;
+      });
     }
   };
 
   const handleAcceptRequest = async (connectionId: string) => {
     try {
       await friendApi.acceptRequest(connectionId);
-      alert('Request accepted!');
-      // Refetch pending and connected
+      showNotification('Request accepted!', 'success');
+      if (subTab === 'requests') setPage(0);
+      else if (subTab === 'home') {
+        const res = await friendApi.getHomeSummary();
+        setHomeSummary(res.data);
+      }
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to accept');
+      showNotification(err.response?.data?.message || 'Failed to accept', 'error');
     }
   };
 
   const handleDeclineRequest = async (connectionId: string) => {
     try {
       await friendApi.declineRequest(connectionId);
-      alert('Request declined');
-      // Refetch pending
+      showNotification('Successfully declined the request', 'success');
+      if (subTab === 'requests') setPage(0);
+      else if (subTab === 'home') {
+        const res = await friendApi.getHomeSummary();
+        setHomeSummary(res.data);
+      }
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to decline');
+      showNotification(err.response?.data?.message || 'Failed to decline', 'error');
     }
   };
 
   const handleMessageFriend = (friendId: string) => {
-    // Navigate to chat with that friend
     navigate(`/chat/${friendId}`);
   };
 
-  // ---- Sidebar click handler ----
+  // ---- Sidebar & sub‑tab handlers ----
   const handleSetActiveTab = (tab: string) => {
     if (tab === 'chat') navigate('/chat');
     else if (tab === 'friends') navigate('/friends/home');
   };
 
-  // ---- Sub‑tab click handler ----
   const handleSubTabChange = (tab: 'home' | 'friends' | 'requests' | 'suggestions') => {
-    setPage(0); // reset pagination
+    setPage(0);
     let path = '';
     if (tab === 'home') path = '/friends/home';
     else if (tab === 'friends') path = '/friends/all-friends';
@@ -143,7 +225,6 @@ export default function Dashboard() {
     navigate(path);
   };
 
-  // ---- Load more ----
   const loadMore = () => {
     if (hasMore && !loading) {
       setPage(prev => prev + 1);
@@ -159,26 +240,41 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="d-flex overflow-hidden" style={{ height: '100vh', width: '100vw' }}>
-      <Sidebar activeTab={activeTab} setActiveTab={handleSetActiveTab} />
-      <div className="d-flex flex-column flex-grow-1" style={{ height: '100vh' }}>
-        <Topbar activeTab={activeTab} subTab={subTab} />
-        <MainContent
-          activeTab={activeTab}
-          contacts={[]} // TODO: fetch real contacts for chat
-          allUsers={allUsers}
-          homeSummary={homeSummary}
-          onConnect={handleConnect}
-          onAcceptRequest={handleAcceptRequest}
-          onDeclineRequest={handleDeclineRequest}
-          onMessageFriend={handleMessageFriend}
-          subTab={subTab}
-          onSubTabChange={handleSubTabChange}
-          loading={loading}
-          hasMore={hasMore}
-          onLoadMore={loadMore}
-        />
+    <>
+      {/* Notification toast */}
+      {notification && (
+        <div
+          className={`position-fixed top-0 start-50 translate-middle-x mt-3 p-3 rounded-3 shadow-lg text-white ${
+            notification.type === 'success' ? 'bg-success' : notification.type === 'error' ? 'bg-danger' : 'bg-info'
+          }`}
+          style={{ zIndex: 9999, maxWidth: '90%', transition: 'opacity 0.3s' }}
+        >
+          {notification.message}
+        </div>
+      )}
+      <div className="d-flex overflow-hidden" style={{ height: '100vh', width: '100vw' }}>
+        <Sidebar activeTab={activeTab} setActiveTab={handleSetActiveTab} />
+        <div className="d-flex flex-column flex-grow-1" style={{ height: '100vh' }}>
+          <Topbar activeTab={activeTab} subTab={subTab} />
+          <MainContent
+            activeTab={activeTab}
+            contacts={[]} // TODO: fetch real contacts for chat
+            allUsers={allUsers}
+            homeSummary={homeSummary}
+            onConnect={handleConnect}
+            onAcceptRequest={handleAcceptRequest}
+            onDeclineRequest={handleDeclineRequest}
+            onMessageFriend={handleMessageFriend}
+            subTab={subTab}
+            onSubTabChange={handleSubTabChange}
+            loading={loading}
+            hasMore={hasMore}
+            onLoadMore={loadMore}
+            loadingFriendIds={loadingFriendIds}
+            requestedFriendIds={requestedFriendIds}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

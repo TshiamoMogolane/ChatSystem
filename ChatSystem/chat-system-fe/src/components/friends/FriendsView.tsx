@@ -9,6 +9,7 @@ import {
   FaCheck,
   FaTimes,
   FaComment,
+  FaSpinner,
 } from 'react-icons/fa';
 import { type Friend, type HomeSummary } from '../../services/friendApi';
 
@@ -24,6 +25,8 @@ interface FriendsViewProps {
   loading?: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
+  loadingFriendIds?: Set<string>;
+  requestedFriendIds?: Set<string>;
 }
 
 export default function FriendsView({
@@ -38,6 +41,8 @@ export default function FriendsView({
   loading,
   hasMore,
   onLoadMore,
+  loadingFriendIds = new Set(),
+  requestedFriendIds = new Set(),
 }: FriendsViewProps) {
   // ---- Derive lists based on activeTab ----
   let displayedFriends: Friend[] = [];
@@ -141,6 +146,8 @@ export default function FriendsView({
                         onDecline={onDeclineRequest}
                         onConnect={onConnect}
                         onMessage={onMessageFriend}
+                        loadingFriendIds={loadingFriendIds}
+                        requestedFriendIds={requestedFriendIds}
                       />
                     </div>
                   ))}
@@ -165,6 +172,8 @@ export default function FriendsView({
                         onDecline={onDeclineRequest}
                         onConnect={onConnect}
                         onMessage={onMessageFriend}
+                        loadingFriendIds={loadingFriendIds}
+                        requestedFriendIds={requestedFriendIds}
                       />
                     </div>
                   ))}
@@ -187,6 +196,8 @@ export default function FriendsView({
                       onDecline={onDeclineRequest}
                       onConnect={onConnect}
                       onMessage={onMessageFriend}
+                      loadingFriendIds={loadingFriendIds}
+                      requestedFriendIds={requestedFriendIds}
                     />
                   </div>
                 ))}
@@ -211,20 +222,27 @@ export default function FriendsView({
   );
 }
 
-// ---- Friend Card component (to avoid repetition) ----
+// ---- Friend Card component ----
 function FriendCard({
   friend,
   onAccept,
   onDecline,
   onConnect,
   onMessage,
+  loadingFriendIds,
+  requestedFriendIds,
 }: {
   friend: Friend;
   onAccept: (id: string) => void;
   onDecline: (id: string) => void;
   onConnect: (id: string) => void;
   onMessage: (id: string) => void;
+  loadingFriendIds: Set<string>;
+  requestedFriendIds: Set<string>;
 }) {
+  const isLoading = loadingFriendIds.has(friend.id);
+  const isRequested = requestedFriendIds.has(friend.id);
+
   return (
     <div className="card h-100 shadow-sm border-0 bg-light">
       <div className="card-body d-flex flex-column align-items-center text-center">
@@ -248,13 +266,13 @@ function FriendCard({
           {friend.status === 'pending' && (
             <>
               <button
-                onClick={() => onAccept(friend.id)}
+                onClick={() => onAccept(friend.connectionId!)}
                 className="btn btn-primary btn-sm fw-medium rounded-3"
               >
                 <FaCheck className="me-1" /> Accept
               </button>
               <button
-                onClick={() => onDecline(friend.id)}
+                onClick={() => onDecline(friend.connectionId!)}
                 className="btn btn-outline-danger btn-sm fw-medium rounded-3"
               >
                 <FaTimes className="me-1" /> Decline
@@ -265,8 +283,18 @@ function FriendCard({
             <button
               onClick={() => onConnect(friend.id)}
               className="btn btn-primary btn-sm fw-medium rounded-3"
+              disabled={isLoading || isRequested}
+              style={{ minWidth: '100px' }} // ✅ ensures same width for "Connect" and "Sent"
             >
-              <FaUserPlus className="me-1" /> Connect
+              {isLoading ? (
+                <FaSpinner className="spinner-border spinner-border-sm me-1" />
+              ) : isRequested ? (
+                'Sent'
+              ) : (
+                <>
+                  <FaUserPlus className="me-1" /> Connect
+                </>
+              )}
             </button>
           )}
         </div>

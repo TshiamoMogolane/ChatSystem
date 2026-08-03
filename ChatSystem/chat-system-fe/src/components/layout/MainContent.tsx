@@ -16,6 +16,9 @@ interface MainContentProps {
   loading?: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
+  // 🔥 ADD THESE TWO PROPS
+  loadingFriendIds?: Set<string>;
+  requestedFriendIds?: Set<string>;
 }
 
 export default function MainContent({
@@ -32,6 +35,8 @@ export default function MainContent({
   loading,
   hasMore,
   onLoadMore,
+  loadingFriendIds = new Set(), // default empty set
+  requestedFriendIds = new Set(), // default empty set
 }: MainContentProps) {
   return (
     <div className="flex-grow-1 p-4 bg-light overflow-auto">
@@ -50,6 +55,9 @@ export default function MainContent({
           loading={loading}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
+          // 🔥 PASS THEM HERE
+          loadingFriendIds={loadingFriendIds}
+          requestedFriendIds={requestedFriendIds}
         />
       )}
     </div>
