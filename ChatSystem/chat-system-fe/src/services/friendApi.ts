@@ -1,12 +1,14 @@
 import apiClient from './axios';
 
 export interface Friend {
-  id: string;
+  id: string;           // User ID
+  connectionId?: string; // 🔥 ADD THIS (optional, only for pending)
   name: string;
   email: string;
   online: boolean;
   status: 'connected' | 'pending' | 'suggested';
 }
+
 
 export interface HomeSummary {
   pendingCount: number;

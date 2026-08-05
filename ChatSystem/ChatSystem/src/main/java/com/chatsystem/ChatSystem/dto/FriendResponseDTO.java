@@ -8,6 +8,8 @@ public class FriendResponseDTO {
     
     private String surname;
 
+    private String connectionId; // 🔥 ADD THIS (only for pending requests)
+
     private String profilePicture;
 
     private String status;
@@ -27,6 +29,17 @@ public class FriendResponseDTO {
         this.profilePicture = profilePicture;
     }
 
+    public FriendResponseDTO(String id, String name, String surname, String connectionId, String profilePicture, String status, String email, boolean online) {
+        Id = id;
+        this.name = name;
+        this.surname = surname;
+        this.connectionId = connectionId;
+        this.profilePicture = profilePicture;
+        this.status = status;
+        this.email = email;
+        this.online = online;
+    }
+
     public String getProfilePicture() {
         return profilePicture;
     }
@@ -38,6 +51,14 @@ public class FriendResponseDTO {
     private boolean online;
     // getters & setters
 
+
+    public String getConnectionId() {
+        return connectionId;
+    }
+
+    public void setConnectionId(String connectionId) {
+        this.connectionId = connectionId;
+    }
 
     public String getEmail() {
         return email;
@@ -96,6 +117,7 @@ public class FriendResponseDTO {
                 "Id='" + Id + '\'' +
                 ", name='" + name + '\'' +
                 ", surname='" + surname + '\'' +
+                ", connectionId='" + connectionId + '\'' +
                 ", profilePicture='" + profilePicture + '\'' +
                 ", status='" + status + '\'' +
                 ", email='" + email + '\'' +
