@@ -13,7 +13,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,19 +45,17 @@ public class FriendService {
         return new PageImpl<>(dtos, pageable, connections.getTotalElements());
     }
 
-
     // ---- Pending requests (incoming) ----
     public Page<FriendResponseDTO> getPendingRequests(User currentUser, Pageable pageable) {
         Page<Connection> connections = connectionRepository.findByAddresseeAndStatus(
                 currentUser, Connection.ConnectionStatus.PENDING, pageable);
 
         List<FriendResponseDTO> dtos = connections.getContent().stream()
-                .map(conn -> toFriendDTO(conn.getRequester(), "pending"))
+                .map(conn -> toFriendDTO(conn.getRequester(), "pending", conn)) // 🔥 Pass the connection
                 .collect(Collectors.toList());
 
         return new PageImpl<>(dtos, pageable, connections.getTotalElements());
     }
-
     // ---- Suggestions ----
     public Page<FriendResponseDTO> getSuggestions(User currentUser, Pageable pageable) {
         // 🚀 One single database query does EVERYTHING!
@@ -69,6 +66,7 @@ public class FriendService {
                 .collect(Collectors.toList());
 
         return new PageImpl<>(dtos, pageable, suggestions.getTotalElements());
+
     }
 
     // ---- Home summary ----
@@ -78,7 +76,7 @@ public class FriendService {
                 currentUser, Connection.ConnectionStatus.PENDING);
 
         List<FriendResponseDTO> pendingDTOs = pendingConns.stream()
-                .map(conn -> toFriendDTO(conn.getRequester(), "pending"))
+                .map(conn -> toFriendDTO(conn.getRequester(), "pending", conn))
                 .collect(Collectors.toList());
 
         int pendingCount = connectionRepository.countByAddresseeAndStatus(
@@ -136,14 +134,20 @@ public class FriendService {
     // ---- Action: Accept request ----
     @Transactional
     public void acceptRequest(String connectionId) {
+
+        logger.info("statring the process to a accept the request{} ",connectionId);
         Connection conn = connectionRepository.findById(connectionId)
                 .orElseThrow(() -> new RuntimeException("Connection not found"));
+
         if (conn.getStatus() != Connection.ConnectionStatus.PENDING) {
+            logger.info("Request request not found ");
             throw new RuntimeException("Not a pending request");
         }
+        logger.info("change status ");
         conn.setStatus(Connection.ConnectionStatus.ACCEPTED);
         conn.setUpdatedAt(LocalDateTime.now());
         connectionRepository.save(conn);
+        logger.info("done with connection ");
     }
 
     // ---- Action: Decline request ----
@@ -161,16 +165,26 @@ public class FriendService {
     }
 
     // ---- Helper: convert User to DTO ----
-    private FriendResponseDTO toFriendDTO(User user, String status) {
+    private FriendResponseDTO toFriendDTO(User user, String status, Connection connection) {
         FriendResponseDTO dto = new FriendResponseDTO();
         dto.setId(user.getId());
         dto.setName(user.getUsername());
-        dto.setEmail(user.getEmail());           // assuming User has getEmail()
+        dto.setEmail(user.getEmail());
         dto.setOnline(isUserOnline(user));
         dto.setStatus(status);
+
+        // If the status is "pending" and a connection is provided, set the connectionId
+        if ("pending".equals(status) && connection != null) {
+            dto.setConnectionId(connection.getId());
+        }
+
         return dto;
     }
 
+    // Overload for non-pending (or when connection is not needed)
+    private FriendResponseDTO toFriendDTO(User user, String status) {
+        return toFriendDTO(user, status, null);
+    }
     // ---- Online logic (based on lastActive timestamp) ----
     private boolean isUserOnline(User user) {
         if (user.getLastActive() == null) return false;

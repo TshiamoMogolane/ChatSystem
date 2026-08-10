@@ -65,7 +65,33 @@ export default function FriendsView({
   const pendingToDisplay = pendingRequests.slice(0, MAX_PENDING_DISPLAY);
 
   const getTitle = () => {
+  // ---- Derive lists based on activeTab ----
+  let displayedFriends: Friend[] = [];
+  let pendingRequests: Friend[] = [];
+  let suggestedUsers: Friend[] = [];
+  let totalCount = 0;
+
+  if (activeTab === 'home') {
+    pendingRequests = homeSummary?.pending || [];
+    suggestedUsers = homeSummary?.suggestions || [];
+    totalCount = (homeSummary?.pendingCount || 0) + (homeSummary?.suggestionsCount || 0);
+  } else {
+    displayedFriends = friends;
+    pendingRequests = friends.filter(f => f.status === 'pending');
+    suggestedUsers = friends.filter(f => f.status === 'suggested');
+    totalCount = friends.length;
+  }
+
+  const MAX_PENDING_DISPLAY = 4;
+  const pendingToDisplay = pendingRequests.slice(0, MAX_PENDING_DISPLAY);
+
+  const getTitle = () => {
     switch (activeTab) {
+      case 'home': return 'Home';
+      case 'friends': return 'My Friends';
+      case 'requests': return 'Requests';
+      case 'suggestions': return 'Suggestions';
+      default: return '';
       case 'home': return 'Home';
       case 'friends': return 'My Friends';
       case 'requests': return 'Requests';
@@ -82,6 +108,10 @@ export default function FriendsView({
           {getTitle()}
         </div>
 
+        <div className="fw-semibold text-dark" style={{ minWidth: '120px' }}>
+          {getTitle()}
+        </div>
+
         <div className="d-flex gap-2 justify-content-center flex-grow-1">
           <button
             className={`btn btn-sm ${activeTab === 'home' ? 'btn-primary' : 'btn-outline-secondary'}`}
@@ -91,8 +121,15 @@ export default function FriendsView({
           </button>
           <button
             className={`btn btn-sm ${activeTab === 'friends' ? 'btn-primary' : 'btn-outline-secondary'}`}
+            onClick={() => onTabChange('home')}
+          >
+            <FaHome className="me-1" /> Home
+          </button>
+          <button
+            className={`btn btn-sm ${activeTab === 'friends' ? 'btn-primary' : 'btn-outline-secondary'}`}
             onClick={() => onTabChange('friends')}
           >
+            <FaUserFriends className="me-1" /> All Friends
             <FaUserFriends className="me-1" /> All Friends
           </button>
           <button
@@ -100,11 +137,14 @@ export default function FriendsView({
             onClick={() => onTabChange('requests')}
           >
             <FaEnvelope className="me-1" /> Requests
+            <FaEnvelope className="me-1" /> Requests
           </button>
           <button
             className={`btn btn-sm ${activeTab === 'suggestions' ? 'btn-primary' : 'btn-outline-secondary'}`}
+          
             onClick={() => onTabChange('suggestions')}
           >
+            <FaLightbulb className="me-1" /> Suggestions
             <FaLightbulb className="me-1" /> Suggestions
           </button>
         </div>
@@ -114,9 +154,16 @@ export default function FriendsView({
             {totalCount} users
           </span>
         )}
+
+        {activeTab !== 'home' && (
+          <span className="text-muted small ms-2" style={{ minWidth: '80px', textAlign: 'right' }}>
+            {totalCount} users
+          </span>
+        )}
       </div>
 
       {/* Scrollable content */}
+    
       <div className="flex-grow-1 overflow-auto p-4">
         {activeTab === 'home' ? (
           // ---- HOME TAB ----
@@ -301,4 +348,5 @@ function FriendCard({
       </div>
     </div>
   );
+}
 }

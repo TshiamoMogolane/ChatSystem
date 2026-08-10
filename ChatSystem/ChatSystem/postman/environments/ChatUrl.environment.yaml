@@ -1,0 +1,4 @@
+name: ChatUrl
+values:
+  - key: BASE_URL
+    value: ''
