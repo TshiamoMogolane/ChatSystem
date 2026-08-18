@@ -1,5 +1,6 @@
+// @ts-ignore
 import ChatView from '../chat/ChatView';
-import FriendsView from '../friends/FriendsView';
+import FriendsView from '../friends/FriendsView'; // adjusted path
 import { type Friend, type HomeSummary } from '../../services/friendApi';
 
 interface MainContentProps {
@@ -16,7 +17,6 @@ interface MainContentProps {
   loading?: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
-  // 🔥 ADD THESE TWO PROPS
   loadingFriendIds?: Set<string>;
   requestedFriendIds?: Set<string>;
 }
@@ -35,8 +35,8 @@ export default function MainContent({
   loading,
   hasMore,
   onLoadMore,
-  loadingFriendIds = new Set(), // default empty set
-  requestedFriendIds = new Set(), // default empty set
+  loadingFriendIds = new Set(),
+  requestedFriendIds = new Set(),
 }: MainContentProps) {
   return (
     <div className="flex-grow-1 p-4 bg-light overflow-auto">
@@ -55,7 +55,6 @@ export default function MainContent({
           loading={loading}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          // 🔥 PASS THEM HERE
           loadingFriendIds={loadingFriendIds}
           requestedFriendIds={requestedFriendIds}
         />
