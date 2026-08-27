@@ -11,7 +11,36 @@ import {
   FaComment,
   FaSpinner,
 } from 'react-icons/fa';
+import React from 'react';
 import { type Friend, type HomeSummary } from '../../services/friendApi';
+import apiClient from '../../services/axios';
+
+const BACKEND_ORIGIN = apiClient.defaults.baseURL?.replace('/api', '') || 'http://localhost:8080';
+
+const getRandomAvatar = (name: string) =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=150&rounded=true`;
+
+const getProfilePictureUrl = (friend: Friend) => {
+  const friendData = friend as Friend & {
+    profilePicUrl?: string;
+    profilePicture?: string;
+    avatarUrl?: string;
+    profile_picture_url?: string;
+  };
+  const rawPictureUrl = friend.profilePictureUrl
+    || friendData.profilePicUrl
+    || friendData.profilePicture
+    || friendData.avatarUrl
+    || friendData.profile_picture_url;
+
+  if (!rawPictureUrl) return getRandomAvatar(friend.name);
+
+  const pictureUrl = rawPictureUrl.startsWith('http')
+    ? rawPictureUrl
+    : `${BACKEND_ORIGIN}${rawPictureUrl.startsWith('/') ? '' : '/'}${rawPictureUrl}`;
+
+  return `${pictureUrl}${pictureUrl.includes('?') ? '&' : '?'}v=${Date.now()}`;
+};
 
 interface FriendsViewProps {
   friends: Friend[];
@@ -242,16 +271,27 @@ function FriendCard({
 }) {
   const isLoading = loadingFriendIds.has(friend.id);
   const isRequested = requestedFriendIds.has(friend.id);
+  const [imageFailed, setImageFailed] = React.useState(false);
 
   return (
     <div className="card h-100 shadow-sm border-0 bg-light">
       <div className="card-body d-flex flex-column align-items-center text-center">
-        <div
-          className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mb-2"
-          style={{ width: '64px', height: '64px', fontSize: '1.5rem', fontWeight: 500 }}
-        >
-          {friend.name.charAt(0).toUpperCase()}
-        </div>
+        {imageFailed ? (
+          <div
+            className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mb-2"
+            style={{ width: '64px', height: '64px', fontSize: '1.5rem', fontWeight: 500 }}
+          >
+            {friend.name.charAt(0).toUpperCase()}
+          </div>
+        ) : (
+          <img
+            src={getProfilePictureUrl(friend)}
+            alt={`${friend.name}'s profile`}
+            className="rounded-circle border border-primary mb-2"
+            style={{ width: '64px', height: '64px', objectFit: 'cover', borderWidth: '2px' }}
+            onError={() => setImageFailed(true)}
+          />
+        )}
         <h6 className="card-title mb-0 text-dark">{friend.name}</h6>
         <small className="text-muted">{}</small>
         <div className="mt-3 d-flex gap-2 flex-wrap justify-content-center">
