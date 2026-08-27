@@ -5,13 +5,16 @@ import Topbar from '../components/layout/Topbar';
 import MainContent from '../components/layout/MainContent';
 import * as friendApi from '../services/friendApi';
 
+// ✅ Added 'profile' to the type
+type ActiveTab = 'chat' | 'friends' | 'profile';
+
 export default function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
 
   // ---- Determine active tab & sub‑tab from URL ----
   const path = location.pathname;
-  let activeTab: 'chat' | 'friends' = 'chat';
+  let activeTab: ActiveTab = 'chat';
   let subTab: 'home' | 'friends' | 'requests' | 'suggestions' = 'home';
 
   if (path.startsWith('/chat')) {
@@ -32,6 +35,8 @@ export default function Dashboard() {
     } else {
       subTab = 'home';
     }
+  } else if (path.startsWith('/profile')) {   // ✅ NEW: handle /profile route
+    activeTab = 'profile';
   } else {
     navigate('/chat', { replace: true });
     activeTab = 'chat';
@@ -78,22 +83,18 @@ export default function Dashboard() {
 
   // ---- Helper to get friend name by ID ----
   const getFriendName = (friendId: string): string => {
-    // Search in allUsers (used for paginated tabs)
     const fromAll = allUsers.find(f => f.id === friendId);
     if (fromAll) return fromAll.name;
-
-    // Search in homeSummary suggestions (home tab)
     if (homeSummary) {
       const fromSuggestions = homeSummary.suggestions.find(f => f.id === friendId);
       if (fromSuggestions) return fromSuggestions.name;
-      // Also check pending (though not needed for connect)
       const fromPending = homeSummary.pending.find(f => f.id === friendId);
       if (fromPending) return fromPending.name;
     }
-    return 'user'; // fallback
+    return 'user';
   };
 
-  // ---- Fetch data when subTab changes ----
+  // ---- Fetch data when subTab changes (only for friends tab) ----
   useEffect(() => {
     if (activeTab !== 'friends') return;
     setLoading(true);
@@ -139,24 +140,16 @@ export default function Dashboard() {
 
   // ---- Handlers for actions ----
   const handleConnect = async (friendId: string) => {
-    // Get friend name for personalized notification
     const friendName = getFriendName(friendId);
-
-    // Set loading for this friend
     setLoadingFriendIds(prev => new Set(prev).add(friendId));
     try {
       await friendApi.sendConnectRequest(friendId);
       showNotification(`Friend request sent to ${friendName}!`, 'success');
-      // Mark as requested so the button shows "Sent"
       setRequestedFriendIds(prev => new Set(prev).add(friendId));
-
-      // Clear any existing timeout
       if (refetchTimeoutRef.current) {
         clearTimeout(refetchTimeoutRef.current);
         refetchTimeoutRef.current = null;
       }
-
-      // Delay refetch to allow "Sent" to be visible for 1.5 seconds
       refetchTimeoutRef.current = setTimeout(() => {
         if (subTab === 'suggestions') {
           setPage(0);
@@ -168,7 +161,6 @@ export default function Dashboard() {
     } catch (err: any) {
       showNotification(err.response?.data?.message || 'Failed to send request', 'error');
     } finally {
-      // Remove loading state
       setLoadingFriendIds(prev => {
         const newSet = new Set(prev);
         newSet.delete(friendId);
@@ -211,8 +203,13 @@ export default function Dashboard() {
 
   // ---- Sidebar & sub‑tab handlers ----
   const handleSetActiveTab = (tab: string) => {
-    if (tab === 'chat') navigate('/chat');
-    else if (tab === 'friends') navigate('/friends/home');
+    if (tab === 'chat') {
+      navigate('/chat');
+    } else if (tab === 'friends') {
+      navigate('/friends/home');
+    } else if (tab === 'profile') {   // ✅ NEW: handle profile tab
+      navigate('/profile');
+    }
   };
 
   const handleSubTabChange = (tab: 'home' | 'friends' | 'requests' | 'suggestions') => {
@@ -231,17 +228,16 @@ export default function Dashboard() {
     }
   };
 
-  // ---- Loading / error ----
-  if (loading && page === 0) {
+  // ---- Loading / error (only show for friends tab, not for profile) ----
+  if (activeTab !== 'profile' && loading && page === 0) {
     return <div className="d-flex justify-content-center align-items-center h-100">Loading...</div>;
   }
-  if (error) {
+  if (activeTab !== 'profile' && error) {
     return <div className="alert alert-danger m-3">{error}</div>;
   }
 
   return (
     <>
-      {/* Notification toast */}
       {notification && (
         <div
           className={`position-fixed top-0 start-50 translate-middle-x mt-3 p-3 rounded-3 shadow-lg text-white ${

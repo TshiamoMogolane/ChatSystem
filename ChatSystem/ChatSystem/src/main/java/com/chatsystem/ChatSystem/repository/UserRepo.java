@@ -32,7 +32,7 @@ public interface UserRepo extends JpaRepository<User, String> {
 
     long countAllExceptUser(@Param("userId") String userId);
 
-    // 🔥 NEW: The exact SQL query you wrote, with pagination and count
+
     @Query(value = """
             SELECT u.* 
             FROM user u

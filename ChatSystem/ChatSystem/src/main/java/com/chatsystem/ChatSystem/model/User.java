@@ -38,7 +38,19 @@ public class User {
 
     private LocalDateTime lockoutTime;
 
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;  // stores the unique URL/path, e.g. "/uploads/profiles/abc123_165000.jpg"
+
+
     public User() {
+    }
+
+    // getter & setter
+    public String getProfilePictureUrl() {
+        return profilePictureUrl;
+    }
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
     }
 
     public LocalDateTime getLastActive() {

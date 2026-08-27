@@ -32,13 +32,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 👈 activate CORS
-                .csrf(csrf -> csrf.disable()) // only if you don't need CSRF for signup
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // allow signup/login without auth
+                        // ✅ Permit all public endpoints
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/images/**",      // <-- IMAGES
+                                "/ws/**",              // <-- WEBSOCKET
+                                "/error"
+                        ).permitAll()
+                        // ❗ Everything else requires authentication (profile, friends, etc.)
                         .anyRequest().authenticated()
-                ).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); ;
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

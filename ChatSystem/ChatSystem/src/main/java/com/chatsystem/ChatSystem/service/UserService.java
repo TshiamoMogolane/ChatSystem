@@ -1,5 +1,5 @@
 package com.chatsystem.ChatSystem.service;
-import com.chatsystem.ChatSystem.dto.FriendResponseDTO;
+
 import com.chatsystem.ChatSystem.dto.LoginRequest;
 import com.chatsystem.ChatSystem.dto.PendingUser;
 import com.chatsystem.ChatSystem.dto.SignUpRequest;
@@ -31,7 +31,6 @@ import org.springframework.stereotype.Service;
 import javax.security.auth.login.AccountLockedException;
 import java.time.LocalDateTime;
 import java.util.InputMismatchException;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;

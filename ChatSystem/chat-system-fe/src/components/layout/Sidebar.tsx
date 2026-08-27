@@ -1,42 +1,36 @@
-import { FaComments, FaUserFriends, FaCog, FaSignOutAlt } from 'react-icons/fa';
-// 👇 Optional: if you want a placeholder icon for the logo
-// import { FaCommentDots } from 'react-icons/fa';
+import { FaComments, FaUserFriends, FaCog, FaSignOutAlt, FaUser } from 'react-icons/fa';
 
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  onLogout?: () => void; // optional
 }
 
-export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+export default function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarProps) {
   return (
     <div
       className="d-flex flex-column align-items-center py-4"
       style={{
         width: '80px',
-        height: '100%',           // ✅ Use 100% to fill the parent row
+        height: '100%',
         backgroundColor: '#ffffff',
-        borderRight: '1px solid var(--primary)', // Blue border (or var(--border) if you prefer)
+        borderRight: '1px solid var(--primary)',
         justifyContent: 'space-between',
       }}
     >
       {/* ----- TOP SECTION: Logo + Chats & Friends ----- */}
       <div className="d-flex flex-column align-items-center gap-3">
-
-        {/* 🖼️ LOGO – place your own image here */}
         <img
-          src="../public/logo.png"         // 👈 put your logo in public/logo.png
+          src="/logo.png"  // Changed from ../public/logo.png to /logo.png
           alt="App Logo"
           style={{
             width: '46px',
             height: '46px',
             objectFit: 'cover',
-            marginBottom: '8px',    // extra space below logo
+            marginBottom: '8px',
           }}
         />
-        {/* If you don't have a logo yet, you can use an icon: */}
-        {/* <FaCommentDots size={32} color="var(--primary)" style={{ marginBottom: '8px' }} /> */}
 
-        {/* Chat Button */}
         <button
           onClick={() => setActiveTab('chat')}
           className={`sidebar-btn ${activeTab === 'chat' ? 'active' : ''}`}
@@ -45,7 +39,6 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           <FaComments size={24} />
         </button>
 
-        {/* Friends Button */}
         <button
           onClick={() => setActiveTab('friends')}
           className={`sidebar-btn ${activeTab === 'friends' ? 'active' : ''}`}
@@ -55,8 +48,9 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         </button>
       </div>
 
-      {/* ----- BOTTOM SECTION: Settings & Logout ----- */}
+      {/* ----- BOTTOM SECTION: Profile → Settings → Logout ----- */}
       <div className="d-flex flex-column align-items-center gap-3">
+        {/* Separator */}
         <div
           style={{
             width: '36px',
@@ -64,6 +58,16 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             backgroundColor: 'var(--primary-light)',
           }}
         />
+
+        {/* ✅ UPDATED: Profile button now sets activeTab to 'profile' */}
+        <button
+          onClick={() => setActiveTab('profile')}
+          className={`sidebar-btn ${activeTab === 'profile' ? 'active' : ''}`}
+          title="Profile"
+        >
+          <FaUser size={22} />
+        </button>
+
         <button
           onClick={() => console.log('Settings clicked')}
           className="sidebar-btn"
@@ -71,14 +75,44 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         >
           <FaCog size={22} />
         </button>
+
         <button
-          onClick={() => console.log('Logout clicked')}
+          onClick={onLogout || (() => console.log('Logout clicked'))}
           className="sidebar-btn"
           title="Logout"
         >
           <FaSignOutAlt size={22} />
         </button>
       </div>
+
+      {/* Add these styles in your global CSS or index.css */}
+      <style>{`
+        .sidebar-btn {
+          background: none;
+          border: none;
+          color: #6c757d;
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+          cursor: pointer;
+        }
+        .sidebar-btn:hover {
+          background-color: #f0f4ff;
+          color: #007bff;
+        }
+        .sidebar-btn.active {
+          background-color: #007bff;
+          color: #ffffff;
+        }
+        .sidebar-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      `}</style>
     </div>
   );
 }

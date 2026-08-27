@@ -253,7 +253,7 @@ function FriendCard({
           {friend.name.charAt(0).toUpperCase()}
         </div>
         <h6 className="card-title mb-0 text-dark">{friend.name}</h6>
-        <small className="text-muted">{friend.email}</small>
+        <small className="text-muted">{}</small>
         <div className="mt-3 d-flex gap-2 flex-wrap justify-content-center">
           {friend.status === 'connected' && (
             <button

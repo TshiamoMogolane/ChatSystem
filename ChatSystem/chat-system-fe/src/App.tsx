@@ -21,7 +21,7 @@ function App() {
         <Route path="/friends/all-friends" element={<Dashboard />} />
         <Route path="/friends/requests" element={<Dashboard />} />
         <Route path="/friends/suggestions" element={<Dashboard />} />
-
+        <Route path = "/profile" element = {<Dashboard/>}/>
         {/* Redirect old /dashboard to /chat */}
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>

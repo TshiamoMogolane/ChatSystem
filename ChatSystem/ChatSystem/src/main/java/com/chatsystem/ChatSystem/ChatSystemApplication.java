@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 public class ChatSystemApplication {
 
 	public static void main(String[] args) {
+
 		SpringApplication.run(ChatSystemApplication.class, args);
 	}
 

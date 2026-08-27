@@ -1,10 +1,12 @@
-// @ts-ignore
+// ChatView is currently implemented in JavaScript without a declaration file.
+// @ts-expect-error — the module is valid at runtime, but has no TypeScript declarations.
 import ChatView from '../chat/ChatView';
-import FriendsView from '../friends/FriendsView'; // adjusted path
+import FriendsView from '../friends/FriendsView';
+import ProfileView from '../profile/ProfileView'; // ✅ ADDED
 import { type Friend, type HomeSummary } from '../../services/friendApi';
 
 interface MainContentProps {
-  activeTab: 'chat' | 'friends' | string;
+  activeTab: 'chat' | 'friends' | 'profile' | string; // ✅ UPDATED type
   contacts: any[];
   allUsers: Friend[];
   homeSummary?: HomeSummary | null;
@@ -42,6 +44,8 @@ export default function MainContent({
     <div className="flex-grow-1 p-4 bg-light overflow-auto">
       {activeTab === 'chat' ? (
         <ChatView contacts={contacts} />
+      ) : activeTab === 'profile' ? ( // ✅ NEW CONDITION
+        <ProfileView />
       ) : (
         <FriendsView
           friends={allUsers}
