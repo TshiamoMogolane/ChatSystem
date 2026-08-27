@@ -58,7 +58,7 @@ public class FriendService {
     }
     // ---- Suggestions ----
     public Page<FriendResponseDTO> getSuggestions(User currentUser, Pageable pageable) {
-        // 🚀 One single database query does EVERYTHING!
+
         Page<User> suggestions = userRepository.findSuggestedUsers(currentUser.getId(), pageable);
 
         List<FriendResponseDTO> dtos = suggestions.getContent().stream()
@@ -135,7 +135,7 @@ public class FriendService {
     @Transactional
     public void acceptRequest(String connectionId) {
 
-        logger.info("statring the process to a accept the request{} ",connectionId);
+        logger.info("starting the process to a accept the request{} ",connectionId);
         Connection conn = connectionRepository.findById(connectionId)
                 .orElseThrow(() -> new RuntimeException("Connection not found"));
 
@@ -172,7 +172,7 @@ public class FriendService {
         dto.setEmail(user.getEmail());
         dto.setOnline(isUserOnline(user));
         dto.setStatus(status);
-
+        dto.setProfilePicture(user.getProfilePictureUrl());
         // If the status is "pending" and a connection is provided, set the connectionId
         if ("pending".equals(status) && connection != null) {
             dto.setConnectionId(connection.getId());
