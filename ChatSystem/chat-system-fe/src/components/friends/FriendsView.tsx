@@ -287,7 +287,7 @@ function FriendCard({
           <img
             src={getProfilePictureUrl(friend)}
             alt={`${friend.name}'s profile`}
-            className="rounded-circle border border-primary mb-2"
+            className="rounded-circle border-primary mb-2"
             style={{ width: '64px', height: '64px', objectFit: 'cover', borderWidth: '2px' }}
             onError={() => setImageFailed(true)}
           />
